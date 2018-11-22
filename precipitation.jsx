@@ -47,7 +47,41 @@ for (let i = 0; i < 10; i++){
         //map the range of temps (42.5 deg - 48.3 deg) to a range of hues (blue - red).
         let hueMap = 242 + (360-242) * ((yrTemp-42.5)/(48.-42.5));
 
-        //set values
+        //set values for hsl
+        let temp_hue = hueMap;
+        let temp_saturation = 100;
+        let temp_lightness = 40;
+
+        //call color_hsl12rgb function to convert to RGB values
+        let temp_rgb = olor_hs12rgb(temp_hue, temp_saturation, temp_lightness);
+
+        //draw a circle using the x, y and diameter as defined in the current loop
+        let circle = p.ellipse(y+add) * -1, x+add, diameter, diameter);
+        circle.fillColor = makeColor(temp_rgb.r, temp_rgb.g, temp_rgb.b);
+        indexCounter++;
 
     }
 }
+
+//functions to convert hue, saturation , lightness values to rgb values
+function color_hsl2rgb(h, s, l) {
+    var m1, m2, hue;
+    var r, g, b;
+    s /=100;
+    l /= 100;
+    if (s == 0){
+        r = g = b = (l * 255);
+    }else {
+        if (l <= 0.5){
+           m2 = l * (s + 1);
+        }else{
+            m2 = l + s - l * s;
+        }
+        m1 = l * 2 - m2;
+        hue = h / 360;
+        r = color_HueToRgb(m1, m2, hue + 1/3);
+        g = color_HueToRgb(m1, m2, hue);
+        b = color_HueToRgb(m1, m2, hue - 1/3);
+    }
+    return {r: r, g: g, b: b};
+};
