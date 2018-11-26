@@ -1,140 +1,142 @@
-/*
-    This is a script to access xml data pertaining to annual precipitation
-    and avg temperatures in Colorado from 1917-2016. Data retrieved from https://www.ndc.noaa.gov/cag
-*/
-
 var doc = app.activeDocument;
 var p = doc.pathItems;
 
-//the width and height in pixels inside artboard margins.
+//The width and height (in pixels) inside my poster's margins
+var inWidth = 1692;
+var inHeight = 2556;
 
-const inWidth = 1692;
-const inHeight = 2556;
+var margin = 18;
 
-const margin = 18;
-
-//path for this scripts folder (also containing xml files)
-var currentFolder = Folder(File($.fileName).parent).fullName;
+//The path for this scripts folder (also containing xml files)
+var currentFolder = Folder(File($.fileName).parent).fullName; 
 var file = new File(currentFolder+"/temperature.xml");
 var file2 = new File(currentFolder+"/precipitation.xml");
 
 var tempXML, precipXML;
 
-//call functions to read 2 XML files (with respective data-sets)
+//call functions to read 2 XML files (one with precipitation data, the other with temperature data)
 readPrecipXMLFile(file2);
 readTempXMLFile(file);
 
+var BGColor = p.rectangle(0, 0, inWidth+margin*2, inHeight+margin*2);
+BGColor.fillColor = makeColor(0,0,0);
 //loop through XML elements to set parameters of circles in a 10x10 grid.
-let indexCounter = 0;
-for (let i = 0; i < 10; i++){
-    for (let j = 0; j < 10; j++){
-        //get precip value in the XML element associated with the current loop index.
-        let precipAmount = precipXML.data[indexCounter].value;
-
-        //map the range of precipitation values (11.85 in - 25.52 in) to a range of circle sizes in pixels.
-        let diameter = 78.5 + (169.2 - 78.5) * ((precipAmount - 11.85)/(25.52 - 11.85));
-
-        //use the current loop index and the diameter ofr hte current circle to define
-        //the ellipse coordinates.
-        let y = (inHeight / 6 + i * inWidth / 10);
-        let x = (inWidth / 6 + i * inHeight / 10);
-        let add = (inWidth/10 - diameter) / 2;
-
-        //get the precipitation value in the XML element associated with the current loop index.
-        let yrTemp = tempXML.data[indexCounter].value;
-
-
-        //map the range of temps (42.5 deg - 48.3 deg) to a range of hues (blue - red).
-        let hueMap = 242 + (360-242) * ((yrTemp-42.5)/(48.-42.5));
-
-        //set values for hsl
-        let temp_hue = hueMap;
-        let temp_saturation = 100;
-        let temp_lightness = 40;
-
-        //call color_hsl12rgb function to convert to RGB values
-        let temp_rgb = olor_hs12rgb(temp_hue, temp_saturation, temp_lightness);
-
-        //draw a circle using the x, y and diameter as defined in the current loop
-        let circle = p.ellipse(y+add) * -1, x+add, diameter, diameter);
+var indexCounter = 0;
+for(i = 0; i < 10; i++){
+    for(j = 0; j < 10; j++){
+        //get the precipitation value in the XML element associated with the current loop index (indexCounter)
+        var precipAmount = precipXML.data[indexCounter].value;
+        
+        //map the range of precipitation values (11.85in - 25.52in) to a range of circle sizes (in pixels)
+        var diameter = 78.5+(169.2-78.5)*((precipAmount-11.85)/(25.52-11.85));
+        
+        //use the current loop index and the diameter of the current circle to define the coordinates of the circle
+        var y = (inHeight / 6 + i * inWidth / 10);
+        var x = margin + j * inWidth / 10;
+        var add = (inWidth/10 - diameter) / 2;
+        
+        
+        //get the precipitation value in the XML element associated with the current loop index (indexCounter)
+        var yrTemp = tempXML.data[indexCounter].value;
+        
+        
+        //map the range of temperature values (42.5deg - 48.3deg) to a range of Hue values (in degrees using HSL spectrum)
+        var hueMap = 242+(360-242)*((yrTemp-42.5)/(48.3-42.5));
+        
+        //set values for hue, saturation, and lightness
+        var temp_hue = hueMap;
+        var temp_saturation = 100;
+        var temp_lightness = 40;
+        
+        //call color_hsl2rgb function to convert to RGB values
+        var temp_rgb = color_hsl2rgb(temp_hue, temp_saturation, temp_lightness);
+        
+        //draw a circle using the x-coordinate, y-coordinate, and diameter defined in the current loop
+        var circle = p.ellipse((y+add) * -1, x+add,diameter,diameter);
         circle.fillColor = makeColor(temp_rgb.r, temp_rgb.g, temp_rgb.b);
+        
         indexCounter++;
-
     }
+    
 }
 
 //functions to convert hue, saturation , lightness values to rgb values
+//This function was retrieved from https://github.com/fabianmoronzirfas/extendscript/wiki/HSL-Color-Wheel
 function color_hsl2rgb(h, s, l) {
-    let m1, m2, hue;
-    let r, g, b;
-    s /= 100;
+    var m1, m2, hue;
+    var r, g, b;
+    s /=100;
     l /= 100;
-    
-    if (s == 0) {
+    if (s == 0){
         r = g = b = (l * 255);
-    } else {
+    }else {
         if (l <= 0.5){
-            m2 = l * ( s + 1 );
-        } else {
+           m2 = l * (s + 1);
+        }else{
             m2 = l + s - l * s;
         }
-        m1 = l * 2 + m2;
+        m1 = l * 2 - m2;
         hue = h / 360;
-        r = color_HueToRgb( m1, m2, hue + 1/3 );
-        g = color_HueToRgb( m1, m2, hue );
-        b = color_HueToRgb( m1, m2, hue - 1/3 );
+        r = color_HueToRgb(m1, m2, hue + 1/3);
+        g = color_HueToRgb(m1, m2, hue);
+        b = color_HueToRgb(m1, m2, hue - 1/3);
     }
     return {r: r, g: g, b: b};
 };
-//color code conversion functions from:
-// https://github.com/fabianmoronzirfas/extendscript/wiki/HSL-Color-Wheel
 
-function color_HueToRgb( m1, m2, hue) {
-    let v;
-    if (hue < 0) {
+
+function color_HueToRgb(m1, m2, hue) {
+        
+    var v;
+    if (hue < 0){
         hue += 1;
-    } else if (hue > 1) {
+    }else if (hue > 1){
         hue -= 1;
     }
-
-    if (6 * hue < 1) {
-        v = m1 _ (m2 - m1) * hue * 6;
-    } else if (2 * hue < 1) {
+    
+    if (6 * hue < 1){
+        v = m1 + (m2 - m1) * hue * 6;
+    }else if (2 * hue < 1){
         v = m2;
-    } else if (3 * hue < 2) {
+    }else if (3 * hue < 2){
         v = m1 + (m2 - m1) * (2/3 - hue) * 6;
-    } else {
+    }else{
         v = m1;
     }
+    
     return 255 * v;
 };
 
-function makeColor(r, g, b) {
-    let c = new RGBColor();
-    c.red = r;
+function makeColor(r,g,b){
+    var c = new RGBColor();
+    c.red   = r;
     c.green = g;
-    c.blue = b;
+    c.blue  = b;
     return c;
-};
-
-function readTempXMLFile(file) {
-    file.encoding = "UTF8";
-    file.lineFeed = "unix";
-
-    file.open('r');from
-    let tempXMLStr = file.read();
-    file.close();
-    //$.writeIn(tempXMLStr);
-    return tempXML = new XML(tempXMLStr);
-};
-
-function readPrecipXMLFile(file2) {
-    file2.encoding = "UTF8";
-    file2.lineFeed = "unix";
-
-    file2.open('r');
-    let precipXMLStr = file2.read();
-    file2.close();
-
-    return precipXML = new XML(precipXMLStr);
 }
+
+
+//functions to read XML files
+function readTempXMLFile(file) {  
+ 
+        file.encoding = "UTF8";  
+        file.lineFeed = "unix";  
+
+        file.open("r");  
+        var tempXMLStr = file.read();  
+        file.close();  
+        //$.writeln(tempXMLStr);
+        return tempXML = new XML(tempXMLStr); 
+}; 
+
+function readPrecipXMLFile(file2) {  
+ 
+        file2.encoding = "UTF8";  
+        file2.lineFeed = "unix";  
+
+        file2.open("r");  
+        var precipXMLStr = file2.read();  
+        file2.close();  
+        //$.writeln(tempXMLStr);
+        return precipXML = new XML(precipXMLStr); 
+}; 
