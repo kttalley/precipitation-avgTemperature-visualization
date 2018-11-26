@@ -65,23 +65,76 @@ for (let i = 0; i < 10; i++){
 
 //functions to convert hue, saturation , lightness values to rgb values
 function color_hsl2rgb(h, s, l) {
-    var m1, m2, hue;
-    var r, g, b;
-    s /=100;
+    let m1, m2, hue;
+    let r, g, b;
+    s /= 100;
     l /= 100;
-    if (s == 0){
+    
+    if (s == 0) {
         r = g = b = (l * 255);
-    }else {
+    } else {
         if (l <= 0.5){
-           m2 = l * (s + 1);
-        }else{
+            m2 = l * ( s + 1 );
+        } else {
             m2 = l + s - l * s;
         }
-        m1 = l * 2 - m2;
+        m1 = l * 2 + m2;
         hue = h / 360;
-        r = color_HueToRgb(m1, m2, hue + 1/3);
-        g = color_HueToRgb(m1, m2, hue);
-        b = color_HueToRgb(m1, m2, hue - 1/3);
+        r = color_HueToRgb( m1, m2, hue + 1/3 );
+        g = color_HueToRgb( m1, m2, hue );
+        b = color_HueToRgb( m1, m2, hue - 1/3 );
     }
     return {r: r, g: g, b: b};
 };
+//color code conversion functions from:
+// https://github.com/fabianmoronzirfas/extendscript/wiki/HSL-Color-Wheel
+
+function color_HueToRgb( m1, m2, hue) {
+    let v;
+    if (hue < 0) {
+        hue += 1;
+    } else if (hue > 1) {
+        hue -= 1;
+    }
+
+    if (6 * hue < 1) {
+        v = m1 _ (m2 - m1) * hue * 6;
+    } else if (2 * hue < 1) {
+        v = m2;
+    } else if (3 * hue < 2) {
+        v = m1 + (m2 - m1) * (2/3 - hue) * 6;
+    } else {
+        v = m1;
+    }
+    return 255 * v;
+};
+
+function makeColor(r, g, b) {
+    let c = new RGBColor();
+    c.red = r;
+    c.green = g;
+    c.blue = b;
+    return c;
+};
+
+function readTempXMLFile(file) {
+    file.encoding = "UTF8";
+    file.lineFeed = "unix";
+
+    file.open('r');from
+    let tempXMLStr = file.read();
+    file.close();
+    //$.writeIn(tempXMLStr);
+    return tempXML = new XML(tempXMLStr);
+};
+
+function readPrecipXMLFile(file2) {
+    file2.encoding = "UTF8";
+    file2.lineFeed = "unix";
+
+    file2.open('r');
+    let precipXMLStr = file2.read();
+    file2.close();
+
+    return precipXML = new XML(precipXMLStr);
+}
